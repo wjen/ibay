@@ -14,7 +14,6 @@ const protect = asyncHandler(async (req, res, next) => {
 
       // remove password on the req.user
       req.user = await User.findById(decoded.id).select('-password');
-
       next();
     } catch (error) {
       console.log(error);
