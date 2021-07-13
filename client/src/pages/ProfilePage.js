@@ -32,8 +32,6 @@ const ProfilePage = ({ location, history }) => {
         console.log(user);
         dispatch(getUserDetails('profile'));
       } else {
-        console.log(user);
-
         setName(user.name);
         setEmail(user.email);
       }
