@@ -14,7 +14,7 @@ export const addOrderItems = asyncHandler(async (req, res) => {
     shippingPrice,
     totalPrice,
   } = req.body;
-
+  console.log('tax', taxPrice);
   if (orderItems && orderItems.length === 0) {
     res.status(400);
     throw new Error('No order items');
@@ -34,4 +34,19 @@ export const addOrderItems = asyncHandler(async (req, res) => {
 
     res.status(201).json(createdOrder);
   }
+});
+
+//@desc Get an order
+//@route GET /api/orders/:id
+//@access Private
+export const getOrderById = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+
+  const order = await Order.findById(id).populate('user', 'name email');
+
+  if (!order) {
+    res.status(404);
+    throw new Error(`No order with id: ${id}`);
+  }
+  res.json(order);
 });

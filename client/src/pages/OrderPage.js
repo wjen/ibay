@@ -3,82 +3,89 @@ import { Button, Row, Col, ListGroup, Image, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Message from '../components/Message';
-import CheckoutSteps from '../components/CheckoutSteps';
-import { createOrder } from '../actions/orderActions';
-const PlaceOrder = ({ history }) => {
+import Loader from '../components/Loader';
+import { getOrderDetails } from '../actions/orderActions';
+
+const OrderPage = ({ match }) => {
+  const orderId = match.params.id;
   const dispatch = useDispatch();
-  const cart = useSelector((state) => state.cart);
-  const { cartItems, paymentMethod, shippingAddress } = cart;
-  console.log(paymentMethod);
-  const addDecimals = (num) => {
-    return (Math.round(num * 100) / 100).toFixed(2);
-  };
-  // Calculate prices
-  cart.itemsPrice = addDecimals(
-    cart.cartItems.reduce((acc, item) => acc + item.price * item.qty, 0)
-  );
-  // Calculate shipping price
-  cart.shippingPrice = addDecimals(cart.itemsPrice > 1000 ? 0 : 10);
-
-  // Calculate tax
-  cart.taxPrice = addDecimals((0.15 * cart.itemsPrice).toFixed(2));
-
-  // Calculate total
-  cart.totalPrice = (
-    Number(cart.itemsPrice) +
-    Number(cart.shippingPrice) +
-    Number(cart.taxPrice)
-  ).toFixed(2);
 
   // Bring in order state - placeorderhandler will put the order in the state - grab from state
-  const orderCreate = useSelector((state) => state.orderCreate);
-  const { order, success, loading, error } = orderCreate;
+  const orderDetails = useSelector((state) => state.orderDetails);
+  const { order, loading, error } = orderDetails;
 
+  // check for order and make sure it matches the url id, if not fetch the most recent order
   useEffect(() => {
-    if (success) {
-      history.push(`/order/${order._id}`);
+    if (!order || order._id !== orderId) {
+      dispatch(getOrderDetails(orderId));
     }
-    // eslint-disable-next-line
-  }, [history, success]);
-  const placeOrderHandler = () => {
-    dispatch(
-      createOrder({
-        orderItems: cartItems,
-        shippingAddress,
-        paymentMethod,
-        itemsPrice: cart.itemsPrice,
-        shippingPrice: cart.shippingPrice,
-        taxPrice: cart.taxPrice,
-        totalPrice: cart.totalPrice,
-      })
+  }, [order, orderId]);
+
+  // Make sure order is loaded first
+  if (!loading) {
+    // Add decimals for integers
+    const addDecimals = (num) => {
+      return (Math.round(num * 100) / 100).toFixed(2);
+    };
+    // Calculate prices
+    order.itemsPrice = addDecimals(
+      order.orderItems.reduce((acc, item) => acc + item.price * item.qty, 0)
     );
-  };
-  return (
+  }
+
+  return loading ? (
+    <Loader />
+  ) : error ? (
+    <Message variant='danger'>{error}</Message>
+  ) : (
     <>
-      <CheckoutSteps step1 step2 step3 step4 />
+      <h1>Order {orderId}</h1>
       <Row>
         <Col md={8}>
           <ListGroup variant='flush'>
             <ListGroup.Item>
               <h2>Shipping</h2>
               <p>
-                <strong>Address: </strong>
-                {shippingAddress.address}, {shippingAddress.city},
-                {shippingAddress.postalCode}, {shippingAddress.country}
+                <strong>Name: </strong>
+                {order.user.name}
               </p>
+              <p>
+                <strong>Email: </strong>
+                <a href={`mailto:${order.user.email}`}>{order.user.email}</a>
+              </p>
+              <p>
+                <strong>Address: </strong>
+                {order.shippingAddress.address}, {order.shippingAddress.city},
+                {order.shippingAddress.postalCode},{' '}
+                {order.shippingAddress.country}
+              </p>
+              {order.isDelivered ? (
+                <Message variant='success'>
+                  Delivered on {order.DeliveredAt}
+                </Message>
+              ) : (
+                <Message variant='danger'>Not Delivered</Message>
+              )}
             </ListGroup.Item>
             <ListGroup.Item>
               <h2>Payment Method</h2>
-              <strong>Method: </strong>
-              {paymentMethod}
+              <p>
+                <strong>Method: </strong>
+                {order.paymentMethod}
+              </p>
+              {order.isPaid ? (
+                <Message variant='success'>Paid on {order.paidAt}</Message>
+              ) : (
+                <Message variant='danger'>Not Paid</Message>
+              )}
             </ListGroup.Item>
             <ListGroup.Item>
               <h2>Order Items</h2>
-              {cartItems.length === 0 ? (
-                <Message>Your cart is empty</Message>
+              {order.orderItems.length === 0 ? (
+                <Message>Order is empty</Message>
               ) : (
                 <ListGroup variant='flush'>
-                  {cartItems.map((item, index) => {
+                  {order.orderItems.map((item, index) => {
                     return (
                       <ListGroup.Item key={index}>
                         <Row>
@@ -117,43 +124,26 @@ const PlaceOrder = ({ history }) => {
               <ListGroup.Item>
                 <Row>
                   <Col>Items</Col>
-                  <Col>${cart.itemsPrice}</Col>
+                  <Col>${order.itemsPrice}</Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
                 <Row>
                   <Col>Shipping</Col>
-                  <Col>${cart.shippingPrice}</Col>
+                  <Col>${order.shippingPrice}</Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
                 <Row>
                   <Col>Tax</Col>
-                  <Col>${cart.taxPrice}</Col>
+                  <Col>${order.taxPrice}</Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
                 <Row>
                   <Col>Total</Col>
-                  <Col>${cart.totalPrice}</Col>
+                  <Col>${order.totalPrice}</Col>
                 </Row>
-              </ListGroup.Item>
-
-              {error && (
-                <ListGroup.Item>
-                  <Message variant='danger'>{error}</Message>
-                </ListGroup.Item>
-              )}
-
-              <ListGroup.Item>
-                <Button
-                  type='button'
-                  className='w-100'
-                  disabled={cartItems.length === 0}
-                  onClick={placeOrderHandler}
-                >
-                  Place Order
-                </Button>
               </ListGroup.Item>
             </ListGroup>
           </Card>
@@ -163,4 +153,4 @@ const PlaceOrder = ({ history }) => {
   );
 };
 
-export default PlaceOrder;
+export default OrderPage;
