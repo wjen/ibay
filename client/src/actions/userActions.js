@@ -12,8 +12,9 @@ import {
   USER_UPDATE_PROFILE_REQUEST,
   USER_UPDATE_PROFILE_FAIL,
   USER_UPDATE_PROFILE_SUCCESS,
+  USER_DETAILS_RESET,
 } from '../constants/userConstants';
-
+import { ORDER_LIST_MY_RESET } from '../constants/orderConstants';
 import axios from 'axios';
 
 export const login = (email, password) => async (dispatch) => {
@@ -54,6 +55,8 @@ export const login = (email, password) => async (dispatch) => {
 export const logout = () => (dispatch) => {
   localStorage.removeItem('userInfo');
   dispatch({ type: USER_LOGOUT });
+  dispatch({ type: USER_DETAILS_RESET });
+  dispatch({ type: ORDER_LIST_MY_RESET });
 };
 
 export const register = (name, email, password) => async (dispatch) => {
@@ -115,8 +118,6 @@ export const getUserDetails = (id) => async (dispatch, getState) => {
 
     const { data } = await axios.get(`/api/v1/users/${id}`, config);
 
-    console.log(data);
-
     dispatch({
       type: USER_DETAILS_SUCCESS,
       payload: data,
@@ -154,8 +155,6 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
     };
 
     const { data } = await axios.put(`/api/v1/users/profile`, user, config);
-
-    console.log(data);
 
     dispatch({
       type: USER_UPDATE_PROFILE_SUCCESS,
