@@ -3,7 +3,6 @@ import User from '../models/User.js';
 import asyncHandler from 'express-async-handler';
 const protect = asyncHandler(async (req, res, next) => {
   let token;
-  console.log(req.headers.authorization);
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
@@ -27,4 +26,13 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { protect };
+const isAdmin = asyncHandler(async (req, res, next) => {
+  if (req.user && req.user.isAdmin) {
+    next();
+  } else {
+    res.status(401);
+    throw new Error('Not authorized as an admin');
+  }
+});
+
+export { protect, isAdmin };
