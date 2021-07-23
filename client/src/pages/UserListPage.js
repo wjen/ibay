@@ -4,7 +4,7 @@ import { Button, Table } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
-import { listUsers } from '../actions/userActions';
+import { listUsers, deleteUser } from '../actions/userActions';
 
 const UserListPage = ({ history }) => {
   const dispatch = useDispatch();
@@ -14,17 +14,23 @@ const UserListPage = ({ history }) => {
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
+  const userDelete = useSelector((state) => state.userDelete);
+  const {
+    success: successDelete,
+    error: errorDelete,
+    loading: loadingDelete,
+  } = userDelete;
+
   useEffect(() => {
     if (userInfo && userInfo.isAdmin) {
-      console.log(userInfo);
       dispatch(listUsers());
     } else {
       history.push('/login');
     }
-  }, [dispatch, history]);
+  }, [dispatch, history, successDelete, userInfo]);
 
   const deleteHandler = (id) => {
-    console.log('delete');
+    dispatch(deleteUser(id));
   };
   return (
     <>
@@ -60,8 +66,12 @@ const UserListPage = ({ history }) => {
                   )}
                 </td>
                 <td>
-                  <LinkContainer to={`/user/${user._id}/edit`}>
-                    <Button variant='light' className='btn-sm'>
+                  <LinkContainer to={`/admin/user/${user._id}/edit`}>
+                    <Button
+                      variant='light'
+                      className='btn-sm'
+                      disabled={userInfo._id === user._id}
+                    >
                       <i className='fas fa-edit'></i>
                     </Button>
                   </LinkContainer>
@@ -69,6 +79,7 @@ const UserListPage = ({ history }) => {
                     variant='danger'
                     className='btn-sm'
                     onClick={() => deleteHandler(user._id)}
+                    disabled={userInfo._id === user._id}
                   >
                     <i className='fas fa-trash'></i>
                   </Button>
