@@ -57,9 +57,9 @@ export const createProduct = asyncHandler(async (req, res) => {
   res.status(201).json(product);
 });
 
-//@desc Update a product
-//@route PUT /api/v1/products/:id
-//@access Private/Admin
+// @desc    Update a product
+// @route   PUT /api/v1/products/:id
+// @access  Private/Admin
 export const updateProduct = asyncHandler(async (req, res) => {
   const { name, price, description, image, brand, category, countInStock } =
     req.body;
