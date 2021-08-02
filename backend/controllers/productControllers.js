@@ -1,11 +1,21 @@
 import asyncHandler from 'express-async-handler';
+import products from '../data/products.js';
 import Product from '../models/Product.js';
 
 //@desc Fetch all products
 //@route GET /api/products
 //@access Public
 export const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({});
+  // Make search term case insensitive and partial search
+  const keyword = req.query.keyword
+    ? {
+        name: {
+          $regex: req.query.keyword,
+          $options: 'i',
+        },
+      }
+    : {};
+  const products = await Product.find({ ...keyword });
   res.json(products);
 });
 
@@ -45,7 +55,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     name: 'Sample name',
     price: 0,
     user: req.user._id,
-    image: '/images/sample.jpg',
+    image: '/images/sample.jpeg',
     brand: 'Sample brand',
     category: 'Sample Category',
     countInStock: 0,
@@ -77,6 +87,53 @@ export const updateProduct = asyncHandler(async (req, res) => {
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
+  } else {
+    res.status(404);
+    throw new Error('Product not found');
+  }
+});
+
+// @desc    Create a review for a product
+// @route   POST /api/v1/products/:id/reviews
+// @access  Private
+export const createProductReview = asyncHandler(async (req, res) => {
+  const { rating, comment } = req.body;
+
+  const product = await Product.findById(req.params.id);
+
+  if (product) {
+    const alreadyReviewed = product.reviews.find((r) => {
+      console.log(r.user);
+      console.log(req.user._id);
+      console.log(rating);
+      console.log(Number(rating));
+      return r.user.toString() === req.user._id.toString();
+    });
+    if (alreadyReviewed) {
+      res.status(400);
+      throw new Error('Product already reviewed');
+    }
+    const review = {
+      name: req.user.name,
+      rating: Number(rating),
+      comment,
+      user: req.user._id,
+    };
+
+    // Add review to product reviews array
+    product.reviews.push(review);
+
+    // Update product reviews count
+    product.numReviews = product.reviews.length;
+
+    // Update product rating
+    product.rating =
+      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      product.reviews.length;
+
+    await product.save();
+
+    res.status(201).json({ message: 'Review successfully added' });
   } else {
     res.status(404);
     throw new Error('Product not found');
