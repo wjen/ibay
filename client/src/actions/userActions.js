@@ -170,6 +170,14 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
       type: USER_UPDATE_PROFILE_SUCCESS,
       payload: data,
     });
+
+    // Update name on navbar
+    dispatch({
+      type: USER_LOGIN_SUCCESS,
+      payload: data,
+    });
+    // Save the updated user in localstorage
+    localStorage.setItem('userInfo', JSON.stringify(data));
   } catch (error) {
     const message =
       error.response && error.response.data.message
