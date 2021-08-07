@@ -33,7 +33,7 @@ const PlaceOrder = ({ history }) => {
 
   // Bring in order state - placeorderhandler will put the order in the state - grab from state
   const orderCreate = useSelector((state) => state.orderCreate);
-  const { order, success, loading, error } = orderCreate;
+  const { order, success, error } = orderCreate;
 
   useEffect(() => {
     if (success) {

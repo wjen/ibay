@@ -29,11 +29,7 @@ const OrderPage = ({ match, history }) => {
   const { userInfo } = userLogin;
 
   const orderPay = useSelector((state) => state.orderPay);
-  const {
-    success: successPay,
-    loading: loadingPay,
-    error: errorPay,
-  } = orderPay;
+  const { success: successPay, loading: loadingPay } = orderPay;
 
   const orderDeliver = useSelector((state) => state.orderDeliver);
   const { success: successDeliver, loading: loadingDeliver } = orderDeliver;
@@ -67,7 +63,7 @@ const OrderPage = ({ match, history }) => {
         setSdkReady(true);
       }
     }
-  }, [dispatch, orderId, successPay, successDeliver, order]);
+  }, [dispatch, orderId, successPay, successDeliver, order, history, userInfo]);
 
   // Make sure order is loaded first
   if (!loading) {
