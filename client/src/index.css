@@ -1,3 +1,9 @@
+*,
+*::before,
+*::afer {
+  box-sizing: border-box;
+}
+
 main {
   min-height: 80vh;
 }
